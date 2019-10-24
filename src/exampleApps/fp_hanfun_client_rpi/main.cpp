@@ -133,6 +133,9 @@ void handleConfirmationAndIndication(char *buffer)
     {
       std::cout.clear (); std::cout << "[INFO ] " << "Device " << param1 << " registration: "
       << "SUCCESS" << " !" << std::endl; std::cout.clear (); std::cerr.clear ();
+      
+      // client side of successful registration: start list request from here?
+      HF::Application::Handle("lr");
     }
     if(status.compare("ERR") == 0)
     {

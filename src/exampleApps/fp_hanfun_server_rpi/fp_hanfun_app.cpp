@@ -128,6 +128,7 @@ void devMgmtConfirmCallback(openD_hanfunApi_devMgmtCfm_t *hDevMgmtConfirm)
         size_t len = strlen((j.dump()).c_str())+1;
         udp_send((j.dump()).c_str(), len);
       }
+      // open the shared memory here!
       for(int i=0; i < (int) hDevMgmtConfirm->param.entriesRegistration.size; i++)
       {
         std::stringstream stream_uid;
@@ -150,6 +151,14 @@ void devMgmtConfirmCallback(openD_hanfunApi_devMgmtCfm_t *hDevMgmtConfirm)
         stream_uid << std::hex << std::setw(2) << std::setfill('0') << hDevMgmtConfirm->param.entriesRegistration.registrationElement[i].uid[3];
         stream_uid << std::hex << std::setw(2) << std::setfill('0') << hDevMgmtConfirm->param.entriesRegistration.registrationElement[i].uid[4];
         stream_uid >> uid;
+
+        /**
+         * International Portable User Identity (IPUI)
+         * |  PUT   |                    PUN                    |
+         * | 4 bits |                   36 bits                 |
+         */
+        // typedef uint8_t ipui_t[5];
+        // write into shared memory from here!
 
         j["version"] = "1.0.0";
         j["module"] = "hanfun";
@@ -208,10 +217,17 @@ void devMgmtIndicationCallback(openD_hanfunApi_devMgmtInd_t *hDevMgmtIndication)
 
     case OPEND_HANFUNAPI_DEVICE_MANAGEMENT_REGISTER_DEVICE:
       {
+        // gets called when a new device is registered
+
+        // request the list out of the callback?
+        openD_hanfunApi_devMgmtReq_t hMgmtRequest;
+        hMgmtRequest.service = OPEND_HANFUNAPI_DEVICE_MANAGEMENT_ENTRIES_REGISTRATION;
+        openD_hanfunApi_fp_devMgmtRequest(&hMgmtRequest);
+
         std::string address = std::to_string(hDevMgmtIndication->param.getAddress.address);
         std::cout.clear (); std::cout << "[INFO ] " << "Device with ID " << address << " registered" <<
         std::endl; std::cout.clear (); std::cerr.clear ();
-        j["version"] = "1.0.0";
+        j["version"] = "1info about registration success to client.0.0";
         j["module"] = "hanfun";
         j["primitive"] = "indication";
         j["service"] = "deviceManagementRegisterDevice";

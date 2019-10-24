@@ -35,6 +35,22 @@ static bool initSuccessful = false;
 openD_ll_gpio_button_ctxt_t button01;
 
 /**
+ * @brief   Send a mee to the console output of the debugger.
+ *
+ * @details 
+ *
+ * @param   message to be displayed
+ */
+void send_message(char *message)
+{
+   asm("mov r0, %[msg];"
+       "bkpt #0xAB"
+         :
+         : [msg] "r" (message)
+         : "r0", "memory");
+}
+
+/**
  * @brief   Update the application-specific LED.
  *
  * @details The function updates the status of the application-specific LED.
@@ -81,6 +97,7 @@ void profileConfirmCallback(openD_hanfunApi_profileCfm_t *hProfileConfirm);
 void devMgmtConfirmCallback(openD_hanfunApi_devMgmtCfm_t *hDevMgmtConfirm)
 {
   openD_status_t confirmAndIndStatusByte;
+  //send_message("in callback for mgmt confirm");
 
   switch(hDevMgmtConfirm->service)
   {
@@ -110,6 +127,8 @@ void devMgmtConfirmCallback(openD_hanfunApi_devMgmtCfm_t *hDevMgmtConfirm)
 void profileIndCallback( openD_hanfunApi_profileInd_t *hProfileInd )
 {
   static bool ledState = false;
+
+  //send_message("in callback for profile ind");
 
   if(hProfileInd->status != OPEND_STATUS_OK)
   {
@@ -149,22 +168,26 @@ void profileIndCallback( openD_hanfunApi_profileInd_t *hProfileInd )
 void profileConfirmCallback(openD_hanfunApi_profileCfm_t *hProfileConfirm)
 {
   /* Add your application code here. */
+  send_message("in profile confirm callback");
 }
 
 /* Handle the button input of the application user. */
 static int handle_user_input( void )
 {
-
+  char str[10];
   if( OPEND_LL_GPIO_BUTTON_PRESSED == openD_ll_gpio_readButton( &button01, OPEND_LL_GPIO_PIN_USER_BUTTON_01, OPEND_LL_GPIO_BUTTON_DEBOUNCE ) ) {
-
+    //send_message("Button was pressed");
+    //sprintf(str, "Poweron: %d, initsucc: %d", powerOn, initSuccessful);
+    //send_message(str);
     if( powerOn && initSuccessful ) {
       openD_hanfunApi_devMgmtReq_t hMgmtRequest;
       hMgmtRequest.service=OPEND_HANFUNAPI_DEVICE_MANAGEMENT_REGISTER_DEVICE;
       /* Send a device management register request to the concentrator. */
       if( openD_hanfunApi_pp_devMgmtRequest(&hMgmtRequest) == OPEND_STATUS_OK ) {
+        send_message("register request");
         openD_ll_gpio_write( OPEND_LL_GPIO_PIN_USER_LED_01, OPEND_LL_GPIO_PIN_SET );
       }
-      powerOn = false;
+      //powerOn = false;
 
     } else {
 
@@ -183,12 +206,16 @@ static int handle_user_input( void )
     }
   }
 
-  if( powerOn ) {
+/*   if( powerOn ) {
     if( OPEND_LL_GPIO_BUTTON_PRESSED != openD_ll_gpio_readButton( &button01, OPEND_LL_GPIO_PIN_USER_BUTTON_01, OPEND_LL_GPIO_BUTTON_NOT_DEBOUNCE ) )
     {
+      sprintf(str, "Poweron: %d", powerOn);
+      send_message(str);
       powerOn = false;
+      sprintf(str, "Poweron now: %d", powerOn);
+      send_message(str);
     }
-  }
+  } */
 
   return 1;
 }
@@ -197,8 +224,10 @@ static int handle_user_input( void )
 /* main application */
 int main(int argc, char *argv[])
 {
-
-  openD_init( NULL );
+  if(openD_init( NULL ) != OPEND_STATUS_OK)
+  {
+    send_message("fail at openD init");
+  }
 
   deviceRegistered = false;
 
@@ -211,25 +240,26 @@ int main(int argc, char *argv[])
 	openD_hanfunApiPrimitives.openD_hanfunApiProfileInd = profileIndCallback;
 
   /* Initialize the openD HANFUN API primitives. */
-	if(openD_hanfunApi_init(&openD_hanfunApiPrimitives) == OPEND_STATUS_OK)
+	if(openD_hanfunApi_init(&openD_hanfunApiPrimitives) != OPEND_STATUS_OK)
 	{
-
+    send_message("fail at hanfunapi init");
 	}
 
-  if(openD_hanfunApi_pp_init() == OPEND_STATUS_OK)
+  if(openD_hanfunApi_pp_init() != OPEND_STATUS_OK)
 	{
-
+    send_message("fail at hanfunapi pp init");
   }
 
 #if defined PROFILE_SIMPLE_LIGHT
   if(opend_hanfunApi_createProfile(OPEND_HANFUNAPI_SIMPLE_LIGHT, 1) != OPEND_STATUS_OK)
   {
-
+    send_message("fail at createprofile simple light ");
   }
+
 #elif defined PROFILE_SIMPLE_SWITCH
   if(opend_hanfunApi_createProfile(OPEND_HANFUNAPI_SIMPLE_ONOFF_SWITCH, 1) != OPEND_STATUS_OK)
   {
-
+    send_message("fail at createprofile simple switch ");
   }
 #endif
 

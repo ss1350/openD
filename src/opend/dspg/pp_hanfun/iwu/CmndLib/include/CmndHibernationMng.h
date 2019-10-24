@@ -1,0 +1,46 @@
+/*
+ * CmndHibernationMng.h
+ *
+ *  Created on: 16 нояб. 2017 г.
+ *      Author: dspg
+ */
+
+#ifndef MIDDLEWARES_THIRD_PARTY_ULE_CMNDLIB_INCLUDE_CMNDHIBERNATIONMNG_H_
+#define MIDDLEWARES_THIRD_PARTY_ULE_CMNDLIB_INCLUDE_CMNDHIBERNATIONMNG_H_
+
+#include <TypeDefs.h>
+
+
+typedef bool (*t_pf_WakeupCmnd)(void);
+typedef void (*t_pf_OnCmndSleep)(void);
+
+typedef enum {
+	CMND_HBR_STATE_UNKNOWN 		= 0,
+	CMND_HBR_STATE_SLEEP 		= 1,
+	CMND_HBR_STATE_AWAKE 		= 2,
+}t_en_CmndHibernationState;
+
+typedef struct
+{
+	t_pf_WakeupCmnd 			pf_WakeupCmnd;	/// function to make CMND awake
+	t_pf_OnCmndSleep			pf_OnCmndSleep; /// call when cmnd going to sleep
+	t_en_CmndHibernationState	en_HbrState;		/// current state of device
+} t_st_CmndHibernationMng;
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+void p_CmndHibernationMng_Configure( t_st_CmndHibernationMng* pst_HbrMng, t_pf_WakeupCmnd 	pf_WakeupCmnd, t_pf_OnCmndSleep	pf_OnCmndSleep );
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+void p_CmndHibernationMng_EnsureAwake( t_st_CmndHibernationMng* pst_Manager );
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+#endif /* MIDDLEWARES_THIRD_PARTY_ULE_CMNDLIB_INCLUDE_CMNDHIBERNATIONMNG_H_ */
