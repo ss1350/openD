@@ -33,6 +33,11 @@ add_executable(${PROJECT_NAME}
 
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
+# FIND RELATIVE PATH TO INCLUDES IN main.cpp FOR CLIENT!
+    /home/sisc/Workspace/sysrepo/examples/plugins
+    /home/sisc/Workspace/sysrepo/swig/cpp/examples
+    /home/sisc/Workspace/sysrepo/build/inc
+    /home/sisc/Workspace/sysrepo/build/inc/sysrepo
 )
 
 #---------------------------------------------------------------------------------------

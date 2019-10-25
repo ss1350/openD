@@ -35,6 +35,26 @@
 #include "udp.h"
 #include <../../json/single_include/nlohmann/json.hpp>
 
+#ifndef IPC
+#define IPC
+// #include <boost/thread.hpp>
+#include <boost/interprocess/sync/named_mutex.hpp>
+#include <boost/interprocess/containers/string.hpp>
+#include <boost/interprocess/containers/list.hpp>
+#include <boost/interprocess/managed_shared_memory.hpp>
+#include <boost/interprocess/allocators/allocator.hpp>
+#include <boost/interprocess/containers/map.hpp>
+#include <boost/interprocess/containers/vector.hpp>
+template <typename T> using Alloc = boost::interprocess::allocator<T, boost::interprocess::managed_shared_memory::segment_manager>;
+template <typename K> using List = boost::interprocess::list<K, Alloc<K>>;
+#endif
+
+#ifndef TSN_CUC_DECT
+#define TSN_CUC_DECT
+#include "tsn-cuc-dect.hpp"
+#include "tsn-cuc-dect.cpp"
+#endif
+
 using json = nlohmann::json;
 
 /**
@@ -106,6 +126,35 @@ void handleConfirmationAndIndication(char *buffer)
       param2 << " | ";
       std::cout.clear (); std::cout << "dect uid: " << param3 <<
       std::endl; std::cout.clear (); std::cerr.clear ();
+      // write into shm
+
+      // Open shared memory
+      boost::interprocess::managed_shared_memory segment(boost::interprocess::open_only,"SYSREPO_SHM");
+
+      //An allocator convertible to any allocator<T, segment_manager_t> type
+      void_allocator alloc(segment.get_segment_manager());
+
+      // whole module:
+      module_t* module = segment.construct<module_t>("dect_cuc_tsn")(alloc);
+
+      std::pair<module_t*, std::size_t> shmModule = segment.find<module_t>("dect_cuc_tsn");
+
+      if (shmModule.first)
+      {
+        shmModule.first->addDevice(device_t(param1, param3.c_str(), alloc));
+        std::cout << "this should work!\n";
+      }
+      else
+      {
+        std::cout << "NO SHM AVAILABLE\n";
+      }
+      /**
+       * International Portable User Identity (IPUI)
+       * |  PUT   |                    PUN                    |
+       * | 4 bits |                   36 bits                 |
+       */
+      // typedef uint8_t ipui_t[5];
+      // write into shared memory from here!
     }
     if(status.compare("INV") == 0)
     {
